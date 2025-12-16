@@ -1,4 +1,7 @@
 {
+    "LabelTransfer": {
+        "type": "python"
+    },
     "CellDeconvolution": {
         "type": "python"
     },

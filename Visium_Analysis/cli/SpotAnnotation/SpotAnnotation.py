@@ -10,7 +10,7 @@ import subprocess
 
 from ctk_cli import CLIArgumentParser
 from fusion_tools.utils.shapes import load_visium, geojson_to_histomics
-from visium.utils.spot_aggregation import process_sample_to_spot_json
+from Visium_Analysis.utils.spot_aggregation import process_sample_to_spot_json
 
 # Make sure these don't have spaces
 INTEGRATION_DATA_KEYS = [

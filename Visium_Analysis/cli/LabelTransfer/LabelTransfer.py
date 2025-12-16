@@ -1,13 +1,9 @@
 """Implementing cell composition deconvolution
 """
 import os
-import sys
-
 from ctk_cli import CLIArgumentParser
 import girder_client
 
-#import rpy2.robjects as robjects
-#from rpy2.robjects import pandas2ri
 import subprocess
 
 
@@ -24,9 +20,7 @@ ORGAN_REF_KEY = {
     "Azimuth Mouse Cortex Reference": "mousecortexref",
     "Azimuth PBMC Reference": "pbmcref",
     "Azimuth Tonsil Reference": "tonsilref",
-    "ST Deconvolve": "st_deconvolve"
 }
-
 
 INTEGRATION_DATA_KEYS = {
     'adiposeref': ['celltype.l1','celltype.l2'],
@@ -42,12 +36,6 @@ INTEGRATION_DATA_KEYS = {
     'pbmcref': ['celltype.l1','celltype.l2','celltype.l3'],
     'tonsilref': ['celltype.l1','celltype.l2']
 }
-
-# pancreas might be in there also ['annotation.l1']
-# liver might be in there also ['celltype.l1','celltype.l2']
-# tonsil has a v2, ['celltype.l1','celltype.l2']
-# mouse pansci = ['Main_cell_type']
-# lung has a v1 and v2, v2 = ['ann_level_1','ann_level_2','ann_level_3','ann_level_4','ann_level_5','ann_finest_level']
 
 
 def main(args):
@@ -66,21 +54,31 @@ def main(args):
         print('Contents of working directory')
         print(os.listdir(os.getcwd()+'/'))
         file_info = gc.get(f'/file/{args.counts_file}')
+        reference_info = gc.get(f'/file/{args.reference}')
 
         # Downloading counts file to cwd
         gc.downloadFile(
             args.counts_file,
             path = f'{os.getcwd()}/{file_info["name"]}'
         )
+
+        if args.organ == 'KPMP Atlas Kidney':
+            print('Using KPMP Atlas Kidney reference, ensure reference file is provided')
+            if not args.reference:
+                raise ValueError('Reference file must be provided for KPMP Atlas Kidney organ option')
+            # Downloading reference file to cwd
+            gc.downloadFile(
+                args.reference,
+                path = f'{os.getcwd()}/{reference_info["name"]}'
+            )
+
         print('Updated contents of directory')
         print(os.listdir(os.getcwd()+'/'))
 
         print(f'Running cell deconvolution for: {args.organ}')
-
-        subprocess.call(['Rscript', '../../utils/cell_deconvolution.r', '"'+file_info['name']+'"','"'+ORGAN_REF_KEY[args.organ]+'"'])
+        subprocess.call(['Rscript', '../../utils/label_transfer.r', '"'+file_info['name']+'"', '"'+ORGAN_REF_KEY[args.organ]+'"', '"'+reference_info['name']+'"'])
 
         print(os.listdir(os.getcwd()+'/'))
-
         print(f'Uploading file to {file_info["itemId"]}')
         # Posting integration results to item
         file_ext = file_info['name'].split('.')[-1]
