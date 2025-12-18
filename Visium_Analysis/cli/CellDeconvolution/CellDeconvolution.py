@@ -43,7 +43,7 @@ def main(args):
     
     else:
         print(f'Running reference-free cell deconvolution')
-        subprocess.call(['Rscript', '../../utils/cell_deconvolution.r', '"'+file_info['name']+'"'])
+        subprocess.call(['Rscript', '../../scripts/cell_deconvolution.r', '"'+file_info['name']+'"'])
 
         print(os.listdir(os.getcwd()+'/'))
 

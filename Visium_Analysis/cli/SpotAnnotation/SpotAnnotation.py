@@ -51,7 +51,7 @@ def main(args):
     
     # Extracting integration and spot coordinates info
     file_name_path = f"{os.getcwd()}/{file_info['name']}"
-    subprocess.call(['Rscript', '../../utils/extract_rds_dataframes.r', file_name_path, *INTEGRATION_DATA_KEYS])
+    subprocess.call(['Rscript', '../../scripts/extract_rds_dataframes.r', file_name_path, *INTEGRATION_DATA_KEYS])
 
     if not args.spot_coords is None:
         spot_coords_file_info = gc.get(f'/file/{args.spot_coords}')
@@ -84,7 +84,7 @@ def main(args):
         # Checking for gene_list_file or gene_selection_method
         if args.use_gene_selection:
             print(f'Using gene selection method: {args.gene_selection_method}, {args.n} selected')
-            subprocess.call(['Rscript', '../../utils/gene_selection_csv.r', file_name_path,args.gene_selection_method,str(args.n)])
+            subprocess.call(['Rscript', '../../scripts/gene_selection_csv.r', file_name_path,args.gene_selection_method,str(args.n)])
             output_csvs = [i for i in os.listdir(os.getcwd()+'/') if 'csv' in i and not i=='spot_coordinates.csv']
             print(f'Updated Output CSV files: {output_csvs}')
 
@@ -99,7 +99,7 @@ def main(args):
                     path = f'{os.getcwd()}/{gene_list_file_info["name"]}'
                 )
 
-                subprocess.call(['Rscript', '../../utils/gene_selection_csv.r', file_name_path,"specific_list",f'{os.getcwd()}/{gene_list_file_info["name"]}'])
+                subprocess.call(['Rscript', '../../scripts/gene_selection_csv.r', file_name_path,"specific_list",f'{os.getcwd()}/{gene_list_file_info["name"]}'])
                 output_csvs = [i for i in os.listdir(os.getcwd()+'/') if 'csv' in i and not i=='spot_coordinates.csv']
                 print(f'Updated Output CSV files: {output_csvs}')
             except girder_client.HttpError:

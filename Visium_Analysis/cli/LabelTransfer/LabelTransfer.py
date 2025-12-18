@@ -76,7 +76,7 @@ def main(args):
         print(os.listdir(os.getcwd()+'/'))
 
         print(f'Running cell deconvolution for: {args.organ}')
-        subprocess.call(['Rscript', '../../utils/label_transfer.r', '"'+file_info['name']+'"', '"'+ORGAN_REF_KEY[args.organ]+'"', '"'+reference_info['name']+'"'])
+        subprocess.call(['Rscript', '../../scripts/label_transfer.r', '"'+file_info['name']+'"', '"'+ORGAN_REF_KEY[args.organ]+'"', '"'+reference_info['name']+'"'])
 
         print(os.listdir(os.getcwd()+'/'))
         print(f'Uploading file to {file_info["itemId"]}')
