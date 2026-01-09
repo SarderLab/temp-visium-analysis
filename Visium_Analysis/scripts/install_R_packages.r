@@ -1,40 +1,32 @@
 #!/usr/bin/env Rscript
-library(stringr)
-## This script is used for installing a series of R packages and returning an error if a package fails to install.
-## (will also trigger an error if a dependency is not installed)
-packages <- commandArgs(trailingOnly=TRUE)
-package_type <- packages[1]
-packages <- packages[2:length(packages)] 
+options(repos = c(CRAN = "https://cran.rstudio.com/"))
+options(Ncpus = 1)
 
-if (package_type=="install-packages") {
-    for (l in packages) {
-        install.packages(l, dependencies=TRUE, repos = "https://cran.rstudio.com/");
-
-        if ( ! library(l, character.only=TRUE,logical.return=TRUE) ) {
-            quit(status=1, save='no')
-        }
-
-    }
-} else if (package_type=='BiocManager') {
-    for (l in packages) {
-        BiocManager::install(l, dependencies=TRUE,update=TRUE,ask=FALSE);
-
-        if ( ! library(l, character.only=TRUE,logical.return=TRUE) ) {
-            quit(status=1, save='no')
-        }
-
-    }
-} else if (package_type=='GitHub') {
-
-    for (l in packages) {
-        split_package_name <- str_split(l,"&")
-        remotes::install_github(l[1],ref=l[2], dependencies=TRUE)
-
-        if ( ! library(l, character.only=TRUE,logical.return=TRUE) ) {
-            quit(status=1, save='no')
-        }
-
-    }
-
+fail <- function(msg) {
+  message("ERROR: ", msg)
+  quit(status = 1, save = "no")
 }
 
+# Ensure bootstrap installers exist
+# if (!requireNamespace("remotes", quietly = TRUE)) install.packages("remotes")
+if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")
+
+bioc_pkgs <- c(
+  "BSgenome.Hsapiens.UCSC.hg38",
+  "glmGamPoi",
+  "GenomeInfoDb",
+  "GenomicRanges",
+  "EnsDb.Hsapiens.v86",
+  "IRanges",
+  "Rsamtools",
+  "S4Vectors"
+)
+
+for (p in bioc_pkgs) {
+  message("Installing Bioc package: ", p)
+  BiocManager::install(p, dependencies = TRUE, update = FALSE, ask = FALSE)
+  if (!requireNamespace(p, quietly = TRUE)) fail(paste0("Failed to load after install: ", p))
+}
+
+message("All R packages installed successfully.")
+quit(status = 0, save = "no")

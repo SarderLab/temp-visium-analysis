@@ -6,20 +6,13 @@
   <version>0.1.0</version>
   <documentation-url>https://github.com/spborder/visium-processing</documentation-url>
   <license>Apache 2.0</license>
-  <contributor>Samuel Border</contributor>
+  <contributor>Anish Tatke</contributor>
   <acknowledgements>This work is part of efforts in digital pathology by the Sarder Lab: UFL.</acknowledgements>
   <parameters>
     <label>IO</label>
     <description>Input/output parameters.</description>
-    <file reference='_girder_id_'>
-      <name>counts_file</name>
-      <label>Counts file</label>
-      <description>Counts file rds, h5ad, or h5 types supported.</description>
-      <channel>input</channel>
-      <index>0</index>
-    </file>
     <image reference='_girder_id_'>
-      <name>input_files</name>
+      <name>input_file</name>
       <label>Input Image</label>
       <description>input filename </description>
       <channel>input</channel>

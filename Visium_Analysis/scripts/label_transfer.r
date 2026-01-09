@@ -31,27 +31,49 @@ read_data_formats <- function(input_file_path){
 integrate_kpmp_atlas <- function(spatial, atlas_path){
     DefaultAssay(spatial) <- "SCT"
     
-    kpmp_atlas <- LoadH5Seurat(atlas_path, assays = c("counts","scale.data"),tools = TRUE, images=FALSE)
-
-    Idents(kpmp_atlas) <- kpmp_atlas@meta.data$subclass.l2
-
-    kpmp_atlas <- subset(kpmp_atlas, idents = "NA", invert = T)
+    spatial = DietSeurat(
+      spatial,
+      assays = "SCT",
+      layers = NULL,
+      dimreducs = c("pca"), 
+      graphs = NULL
+    )
+    gc()
+    
+    kpmp_atlas <- LoadH5Seurat(atlas_path, tools = TRUE, images=FALSE)
     kpmp_atlas <- UpdateSeuratObject(kpmp_atlas)
-    kpmp_atlas[["RNA"]] <- as(object = kpmp_atlas[["RNA"]],Class="SCTAssay")
+    DefaultAssay(kpmp_atlas) <- "SCT"
+    
+    kpmp_atlas <- DietSeurat(
+      kpmp_atlas,
+      assays = c("RNA", "SCT"),
+      layers = NULL,
+      dimreducs = c("pca"), 
+      graphs = NULL
+    )
+    gc()
 
-    DefaultAssay(kpmp_atlas) <- "RNA"
-    Idents(kpmp_atlas) <- kpmp_atlas@meta.data[["subclass.l2"]]
+    keep <- !is.na(kpmp_atlas$subclass.l2) & kpmp_atlas$subclass.l2 != "NA" & !is.na(kpmp_atlas$subclass.l1) & kpmp_atlas$subclass.l1 != "NA"
+    kpmp_atlas <- kpmp_atlas[, keep, drop = FALSE]
 
     anchors <- FindTransferAnchors(
-        reference = kpmp_atlas, query = spatial, normalization.method = "SCT",
-        query.assay = "SCT", recompute.residuals = FALSE
+        reference = kpmp_atlas,
+        query = spatial,
+        normalization.method = "SCT",
+        query.assay = "SCT",
+        reference.assay = "SCT",
+        recompute.residuals = FALSE,
+        dims = 1:30
     )
+    gc()
+
 
     predictions.assay <- TransferData(
         anchorset = anchors, refdata = kpmp_atlas@meta.data[["subclass.l2"]],
         prediction.assay = TRUE,
         weight.reduction = spatial[["pca"]], dims = 1:30
     )
+    
     spatial[["pred_subclass_l2"]] <- predictions.assay
 
     df_pred <- predictions.assay@data
@@ -64,17 +86,14 @@ integrate_kpmp_atlas <- function(spatial, atlas_path){
 
     spatial@meta.data$subclass.l2 <- max_pred$Seurat_subset
     spatial@meta.data$subclass.l2_score <- max_pred$score
-
-    Idents(kpmp_atlas) <- kpmp_atlas@meta.data[["subclass.l1"]]
-
-    anchors <- FindTransferAnchors(
-        reference = kpmp_atlas, query = spatial, normalization.method = "SCT",
-        query.assay = "SCT", recompute.residuals = FALSE
-    )
+    gc()
+    
     predictions.assay <- TransferData(
-        anchorset = anchors, refdata = kpmp_atlas@meta.data[["subclass.l1"]],
+        anchorset = anchors, 
+        refdata = kpmp_atlas@meta.data[["subclass.l1"]],
         prediction.assay = TRUE,
-        weight.reduction = spatial[["pca"]],dims = 1:30
+        weight.reduction = spatial[["pca"]],
+        dims = 1:30
     )
 
     spatial[["pred_subclass_l1"]] <- predictions.assay
@@ -90,6 +109,7 @@ integrate_kpmp_atlas <- function(spatial, atlas_path){
 
     spatial@meta.data$subclass.l1 <- max_pred$Seurat_subset
     spatial@meta.data$subclass.l1_score <- max_pred$score
+    gc()
 
     return(spatial)
 }

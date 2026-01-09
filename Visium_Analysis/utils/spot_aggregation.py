@@ -1,7 +1,8 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
 from typing import Dict, Tuple, Any, Optional, Union
 import pandas as pd
-from __future__ import annotations
 
 @dataclass(frozen=True)
 class RefMaps:

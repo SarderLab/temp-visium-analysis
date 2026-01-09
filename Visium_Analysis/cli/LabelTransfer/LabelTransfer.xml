@@ -36,7 +36,6 @@
       <element>Azimuth Mouse Cortex Reference</element>
       <element>Azimuth PBMC Reference</element>
       <element>Azimuth Tonsil Reference</element>
-      <element>ST Deconvolve</element>
       <element>Not Listed</element>
       <default>KPMP Atlas Kidney</default>
     </string-enumeration>
