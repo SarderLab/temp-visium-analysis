@@ -24,7 +24,6 @@ get_cell_labels <- function(read_input_file, key_list, input_file_path){
 get_spotfile <- function(read_input_file, input_file_path) {
   # Writing spot coordinates
   spot_save_path <- paste(input_file_path,"spot_coordinates.csv",sep='/')
-
   
   if ("coordinates" %in% slotNames(read_input_file@images$slice1)){
     print("Working with VisiumV1 format")

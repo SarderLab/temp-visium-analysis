@@ -11,27 +11,43 @@
   <parameters>
     <label>IO</label>
     <description>Input/output parameters.</description>
+    <image reference="_girder_id_">
+      <name>input_image</name>
+      <label>Input Image</label>
+      <description>Input Filename </description>
+      <channel>input</channel>
+      <index>0</index>
+    </image>
     <file reference="_girder_id_">
       <name>counts_file</name>
       <label>Counts file</label>
       <description>Counts file can either be RDS, H5AD, or "filtered_feature_bc_matrix.h5" output of *spaceranger* pipeline.</description>
       <channel>input</channel>
-      <index>0</index>
+      <index>1</index>
     </file>
+    <string-enumeration>
+      <name>method</name>
+      <label>Deconvolution Method</label>
+      <description>Type of Deconvolution Methods: </description>
+      <default>ST Deconvolve (under development)</default>
+      <element>ST Deconvolve (under development)</element>
+      <element>RCTD (under development)</element>
+      <index>2</index>
+    </string-enumeration>
     <boolean>
       <name>use_reference</name>
       <label>Use Reference-based Cell Deconvolution</label>
       <description>If selected, cell deconvolution will be performed using reference-based methods. If not selected, a reference-free method will be used.</description>
       <channel>input</channel>
       <default>true</default>
-      <index>1</index>
+      <index>3</index>
     </boolean>
     <file reference="_girder_id_">
       <name>reference_file</name>
       <label>Reference File</label>
       <description>Reference file can either be RDS or H5AD file containing single-cell RNA-seq data to be used for reference-based cell deconvolution.</description>
       <channel>input</channel>
-      <index>2</index>
+      <index>4</index>
     </file>
   </parameters>
   <parameters advanced="true">

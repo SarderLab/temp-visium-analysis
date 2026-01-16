@@ -23,8 +23,21 @@ read_data_formats <- function(input_file_path){
       } else if (tolower(file_extension) == "h5ad"){
         read_file <- LoadH5Seurat(input_file_path)
       }
-      return(read_file)  
+      read_file <- UpdateSeuratObject(read_file)
+      return(read_file)
     }
+}
+
+remove_cell_data <- function(spatial){
+  spatial@assays$predsubclassl1 <- NULL
+  spatial@assays$predsubclassl2 <- NULL
+  
+  spatial@meta.data$subclass.l1 <- NULL
+  spatial@meta.data$subclass.l2 <- NULL
+  
+  spatial@meta.data$subclass.l1_score <- NULL
+  spatial@meta.data$subclass.l2_score <- NULL
+  return(spatial)
 }
 
 # Function for integration using KPMP atlas
@@ -119,12 +132,14 @@ integrate_kpmp_atlas <- function(spatial, atlas_path){
 get_label_transfer <- function(input_file, organ_key, atlas_path){
     # Reading input file
     read_input_file <- read_data_formats(input_file)
+    read_input_file <- remove_cell_data(read_input_file)
     file_extension <- file_ext(input_file)
     if (!is.na(organ_key)) {
       if (organ_key == "kidneykpmp"){
         print("Using KPMP Reference")
         integrated_spatial_data <- integrate_kpmp_atlas(read_input_file, atlas_path)
       } else {
+        print("Using Azimuth Atlas Reference")
         integrated_spatial_data <- RunAzimuth(read_input_file, organ_key)
       }
       

@@ -27,7 +27,7 @@ INTEGRATION_DATA_KEYS = [
         "cluster",
         "cross-species cluster"
     ]
-] + ["predsubclassl1","predsubclassl2"]
+] + ["predsubclassl1","predsubclassl2"] + ["pred_subclass_l1","pred_subclass_l2"]
 
 
 def main(args):
@@ -49,7 +49,7 @@ def main(args):
 
     item_files = gc.listFile(file_info['itemId'])
     for f in item_files:
-        if os.path.splitext(f['name'])[0] == case:
+        if os.path.splitext(f['name'])[0] == f"{case}_integrated":
             print(f'Found counts file in item: {f["name"]}')
             gc.downloadFile(
                 f['_id'],
@@ -127,6 +127,7 @@ def main(args):
             print(f'Using default cell reference file at: {cell_reference_path}')
 
         # Adding properties from other output csv files
+        print('Output files to integrate: ', output_csvs)
         for o in output_csvs:
             if o in ['predsubclassl1.csv', 'pred_subclass_l1.csv']:
                 l1_celltype_path = o

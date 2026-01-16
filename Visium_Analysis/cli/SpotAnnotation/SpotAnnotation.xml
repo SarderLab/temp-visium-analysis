@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <executable>
   <category>FUSION Plugins</category>
-  <title>10x Visium Processing</title>
-  <description>Generate Visium spot annotations from spot centroid coordinates and cell composition (omics) files.</description>
+  <title>Spot Annotation</title>
+  <description>Generate Visium spot annotations from either spot centroid coordinates and cell composition (omics) files, or from integrated 10x Visium data.</description>
   <version>0.1.0</version>
   <documentation-url>https://github.com/spborder/visium-processing</documentation-url>
   <license>Apache 2.0</license>

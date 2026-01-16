@@ -1,44 +1,79 @@
-FROM satijalab/seurat:5.0.0
+FROM python:3.12-slim-bookworm
 
-LABEL maintainer="Anish Tatke CMI Lab <anish.tatke@medicine.ufl.edu>"
+LABEL maintainer="Anish Tatke <anish.tatke@medicine.ufl.edu>"
 
-ENV PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
+ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED=1
 
-# OS deps
+# ------------------------------------------------------------
+# System dependencies (R/Seurat/Bioc + build deps + HDF5)
+# ------------------------------------------------------------
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates curl wget gnupg dirmngr git \
+    build-essential cmake pkg-config \
+    # R / compiled deps
+    libcurl4-openssl-dev libssl-dev libxml2-dev libzstd-dev \
+    libbz2-dev zlib1g-dev liblzma-dev libreadline-dev libsqlite3-dev libffi-dev \
+    libpcre2-dev libgsl-dev gsl-bin \
+    # plotting / text rendering
+    libpng-dev libjpeg-dev libtiff5-dev \
+    libcairo2-dev libfontconfig1-dev libharfbuzz-dev libfribidi-dev \
+    # geospatial (common in Signac/sf stacks)
+    libgdal-dev libgeos-dev libproj-dev libudunits2-dev \
+    # HDF5
+    libhdf5-dev \
+    unzip \
+  && rm -rf /var/lib/apt/lists/*
+
+# ------------------------------------------------------------
+# Install R 4.3.x from CRAN for Debian bookworm (correct key)
+# ------------------------------------------------------------
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      gnupg dirmngr ca-certificates curl \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN mkdir -p /etc/apt/keyrings && \
+    gpg --batch --keyserver keyserver.ubuntu.com \
+        --recv-key "95C0FAF38DB3CCAD0C080A7BDC78B2DDEABC47B7" && \
+    gpg --batch --export "95C0FAF38DB3CCAD0C080A7BDC78B2DDEABC47B7" \
+      | gpg --dearmor -o /etc/apt/keyrings/cran-debian.gpg && \
+    echo "deb [signed-by=/etc/apt/keyrings/cran-debian.gpg] http://cloud.r-project.org/bin/linux/debian bookworm-cran40/" \
+      > /etc/apt/sources.list.d/cran.list
+
 RUN apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-      git wget curl ca-certificates unzip \
-      build-essential cmake autoconf automake libtool pkg-config \
-      libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev \
-      libffi-dev liblzma-dev tk-dev uuid-dev \
-      libcurl4-openssl-dev libexpat1-dev libhdf5-dev libpython3-dev \
-      libv8-dev libglpk-dev libgsl-dev libpcre2-dev libudunits2-dev \
-      libgdal-dev libpq-dev unixodbc unixodbc-dev \
-      libfontconfig1-dev libcairo2-dev libharfbuzz-dev libfribidi-dev \
-      libxml2-dev libxslt1-dev libzstd-dev \
-      libmagick++-dev \
-      memcached \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+    apt-get install -y --no-install-recommends r-base r-base-dev && \
+    rm -rf /var/lib/apt/lists/*
 
+# Sanity
+RUN python --version && R --version
 
-# Python 3.12
-ENV PY312_PREFIX=/opt/python312
-RUN curl -sSLO https://www.python.org/ftp/python/3.12.8/Python-3.12.8.tgz && \
-    tar -xzf Python-3.12.8.tgz && \
-    cd Python-3.12.8 && \
-    ./configure --prefix=${PY312_PREFIX} --with-ensurepip=install && \
-    make -j"$(nproc)" && \
-    make install && \
-    cd / && rm -rf Python-3.12.8 Python-3.12.8.tgz
+# ------------------------------------------------------------
+# Posit Package Manager (PPM) as default CRAN repo for faster installs
+# ------------------------------------------------------------
+# PPM recommends setting HTTPUserAgent so it can serve the right binaries. :contentReference[oaicite:1]{index=1}
+RUN mkdir -p /etc/R && \
+    printf '%s\n' \
+'## Default CRAN repo via Posit Package Manager (Debian bookworm)' \
+'options(HTTPUserAgent = sprintf("R/%s R (%s)", getRversion(), paste(getRversion(), R.version["platform"], R.version["arch"], R.version["os"])))' \
+'options(repos = c(CRAN = "https://packagemanager.posit.co/cran/__linux__/bookworm/latest"))' \
+> /etc/R/Rprofile.site
 
-ENV PATH="${PY312_PREFIX}/bin:${PATH}"
-RUN python3.12 -m pip install -U pip setuptools wheel && \
-    ln -sfn ${PY312_PREFIX}/bin/python3.12 /usr/local/bin/python && \
-    ln -sfn ${PY312_PREFIX}/bin/pip3.12 /usr/local/bin/pip && \
-    python -V && python -m pip -V
+# ------------------------------------------------------------
+# renv-friendly defaults (optional but recommended)
+# ------------------------------------------------------------
+ENV RENV_CONFIG_SANDBOX_ENABLED=FALSE
+ENV RENV_PATHS_LIBRARY=/usr/local/lib/R/site-library
+ENV R_LIBS_SITE=/usr/local/lib/R/site-library
 
-# HDF5 LZF filter
+# Keep compilation from spiking memory
+ENV MAKEFLAGS="-j1"
+
+COPY Visium_Analysis/scripts/install_R_packages.r /tmp/install_R_packages.r
+RUN Rscript /tmp/install_R_packages.r && rm /tmp/install_R_packages.r
+
+# ------------------------------------------------------------
+# HDF5 LZF filter plugin (same as your previous approach)
+# ------------------------------------------------------------
 WORKDIR /lzf
 RUN set -eux; \
     mkdir -p /lzf/lzf; \
@@ -57,13 +92,5 @@ ENV HDF5_PLUGIN_PATH=/lzf
 WORKDIR /
 
 
-# R installs (single script, one RUN for better caching)
-COPY Visium_Analysis/scripts/install_R_packages.r /tmp/install_R_packages.r
-RUN Rscript /tmp/install_R_packages.r && rm -f /tmp/install_R_packages.r
-
-RUN R -e 'remotes::install_github("satijalab/azimuth", dependencies = TRUE, upgrade = "never")'
-RUN R -e 'remotes::install_github("ctlab/fgsea",dependencies=TRUE)'
-RUN R -e 'remotes::install_github("JEFworks-Lab/STdeconvolve",dependencies=TRUE)'
-
-# Helpful defaults
+# Helpful default
 ENV build_path=/opt/build

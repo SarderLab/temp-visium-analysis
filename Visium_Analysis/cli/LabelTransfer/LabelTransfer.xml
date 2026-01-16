@@ -11,19 +11,26 @@
   <parameters>
     <label>IO</label>
     <description>Input/output parameters.</description>
+    <image reference="_girder_id_">
+      <name>input_image</name>
+      <label>Input Image</label>
+      <description>Input Filename </description>
+      <channel>input</channel>
+      <index>0</index>
+    </image>
     <file reference="_girder_id_">
       <name>counts_file</name>
       <label>Counts file</label>
       <description>Counts file can either be RDS, H5AD, or "filtered_feature_bc_matrix.h5" output of *spaceranger* pipeline.</description>
       <channel>input</channel>
-      <index>0</index>
+      <index>1</index>
     </file>
     <string-enumeration>
       <name>organ</name>
       <label>Organ</label>
       <description>Select which organ your upload is of. If it is not listed or you want to skip cell deconvolution, select "Not Listed"</description>
       <channel>input</channel>
-      <index>1</index>
+      <index>2</index>
       <element>Azimuth Adipose Reference</element>
       <element>Azimuth Bone Marrow Reference</element>
       <element>Azimuth Fetus Reference</element>
@@ -44,7 +51,7 @@
       <label>KPMP Atlas Reference Path</label>
       <description>Path to the KPMP Atlas reference data on local filesystem. Required if "KPMP Atlas Kidney" is selected as Organ.</description>
       <channel>input</channel>
-      <index>2</index>
+      <index>3</index>
     </file>
   </parameters>
   <parameters advanced="true">

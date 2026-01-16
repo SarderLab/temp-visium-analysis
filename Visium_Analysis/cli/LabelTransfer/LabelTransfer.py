@@ -53,13 +53,15 @@ def main(args):
         # print contents of current working directory, see if files were copied over
         print('Contents of working directory')
         print(os.listdir(os.getcwd()+'/'))
-        file_info = gc.get(f'/file/{args.counts_file}')
+        # Getting file information from girder
+        image_file_info = gc.get(f'/file/{args.input_image}')
+        query_file_info = gc.get(f'/file/{args.counts_file}')
         reference_info = gc.get(f'/file/{args.reference}')
 
         # Downloading counts file to cwd
         gc.downloadFile(
             args.counts_file,
-            path = f'{os.getcwd()}/{file_info["name"]}'
+            path = f'{os.getcwd()}/{query_file_info["name"]}'
         )
 
         if args.organ == 'KPMP Atlas Kidney':
@@ -75,29 +77,19 @@ def main(args):
         print('Updated contents of directory')
         print(os.listdir(os.getcwd()+'/'))
 
-        print(f'Running cell deconvolution for: {args.organ}')
-        subprocess.call(['Rscript', '../scripts/label_transfer.r', '"'+file_info['name']+'"', '"'+ORGAN_REF_KEY[args.organ]+'"', '"'+reference_info['name']+'"'])
+        print(f'Running Label Transfer for: {args.organ}')
+        subprocess.call(['Rscript', '../scripts/label_transfer.r', '"'+query_file_info['name']+'"', '"'+ORGAN_REF_KEY[args.organ]+'"', '"'+reference_info['name']+'"'])
 
         print(os.listdir(os.getcwd()+'/'))
-        print(f'Uploading file to {file_info["itemId"]}')
+        print(f'Uploading file to {query_file_info["itemId"]}')
         # Posting integration results to item
-        file_ext = file_info['name'].split('.')[-1]
+        file_ext = query_file_info['name'].split('.')[-1]
+        integrated_file = f'{query_file_info["name"].replace("."+file_ext,"_integrated.rds")}'
         uploaded_file = gc.uploadFileToItem(
-            itemId = file_info['itemId'],
-            filepath = f'./{file_info["name"].replace("."+file_ext,"_integrated.rds")}'
+            itemId = image_file_info['itemId'],
+            filepath = f"./{integrated_file}"
         )
-
-        # Putting job parameters to item metadata:
-        job_submitter = gc.get('/user/me')
-        job_meta = {
-            'counts_file': args.counts_file,
-            'output_item': file_info['itemId'],
-            'organ': args.organ,
-            'user': job_submitter['login']
-        }
-
-        gc.put(f'/item/{file_info["itemId"]}/metadata',parameters={'metadata': job_meta})
-
+        print(f'Uploaded file: {integrated_file} into item: {image_file_info["itemId"]}')
         
 if __name__=='__main__':
     main(CLIArgumentParser().parse_args())

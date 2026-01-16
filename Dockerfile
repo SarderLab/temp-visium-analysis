@@ -1,10 +1,16 @@
 # Replace this with whatever tag you build/push for the base image
-FROM tatkeanish/seurat-python312:latest
+FROM tatkeanish/seurat-python-base:stable
 
 LABEL maintainer="Anish Tatke CMI Lab <anish.tatke@medicine.ufl.edu>"
 
 ENV PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
 ENV PYTHONUNBUFFERED=1
+
+ENV build_path=/build
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends memcached && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Copy plugin code late to maximize cache reuse
 ENV plugin_path=/opt/Visium_Analysis
@@ -30,7 +36,7 @@ RUN ls -lah . && \
 
 RUN python -m slicer_cli_web.cli_list_entrypoint --list_cli
 RUN python -m slicer_cli_web.cli_list_entrypoint LabelTransfer --help
-RUN python -m slicer_cli_web.cli_list_entrypoint CellDeconvolution --help
+# RUN python -m slicer_cli_web.cli_list_entrypoint CellDeconvolution --help
 RUN python -m slicer_cli_web.cli_list_entrypoint SpotAnnotation --help
 
 ENTRYPOINT ["/bin/bash","docker-entrypoint.sh"]
