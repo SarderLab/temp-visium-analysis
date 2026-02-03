@@ -52,4 +52,6 @@ extract_dataframes <- function(input_file, key_list) {
 key_list <- commandArgs(trailingOnly=TRUE)
 input_file <- key_list[1]
 key_list <- key_list[2:length(key_list)]
-extract_dataframes(input_file, key_list)
+suppressWarnings({
+  extract_dataframes(input_file, key_list)
+})

@@ -33,7 +33,7 @@
       <name>use_gene_selection</name>
       <longflag>use-gene-selection</longflag>
       <label>Use Gene Selection</label>
-      <description>Whether or not to select genes based on the below Gene Selection Method. If a specific list is needed, include the file id of a CSV file containing a list of those genes.</description>
+      <description>Whether or not to select genes based on the below Gene Selection Method. If a specific list is needed, attach the CSV file containing a list of those genes in the field "Gene List File".</description>
       <default>0</default>
     </boolean>
     <string-enumeration>

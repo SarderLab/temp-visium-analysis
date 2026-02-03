@@ -156,4 +156,7 @@ atlas_path <- gsub('\\"','',arg_list[3])
 print(input_file)
 print(organ_key)
 print(atlas_path)
-get_label_transfer(input_file,organ_key,atlas_path)
+
+suppressWarnings({
+  get_label_transfer(input_file,organ_key,atlas_path)
+})

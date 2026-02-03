@@ -30,4 +30,6 @@ arg_list <- commandArgs(trailingOnly=TRUE)
 print(arg_list)
 atlas_path <- gsub('\\"','',arg_list[1])
 print(atlas_path)
-transform_SCT(atlas_path)
+suppressWarnings({
+  transform_SCT(atlas_path)
+})
