@@ -92,13 +92,7 @@ def main(args):
         # Loading annotations from spot coordinate path
         visium_spots = load_visium(spot_coords_path)
 
-        # Checking for gene_list_file or gene_selection_method
-        if args.use_gene_selection:
-            print(f'Using gene selection method: {args.gene_selection_method}, {args.n} selected')
-            subprocess.call(['Rscript', '../scripts/gene_selection_csv.r', file_name_path,args.gene_selection_method,str(args.n)])
-            output_csvs = [i for i in os.listdir(os.getcwd()+'/') if 'csv' in i and not i=='spot_coordinates.csv']
-            print(f'Updated Output CSV files: {output_csvs}')
-
+        # Checking for gene_list_file
         if args.gene_list_file is not None:
             try:
                 gene_list_file_info = gc.get(f'/file/{args.gene_list_file}')
