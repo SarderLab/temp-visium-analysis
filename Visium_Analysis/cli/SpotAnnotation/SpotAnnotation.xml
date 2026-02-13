@@ -14,64 +14,40 @@
     <image reference='_girder_id_'>
       <name>input_file</name>
       <label>Input Image</label>
-      <description>input filename </description>
+      <description>Input image file containing integrated 10x Visium data or omics analysis results.</description>
       <channel>input</channel>
       <index>1</index>
     </image>
+    <file reference="_girder_id_">
+      <name>cell_reference_file</name>
+      <longflag>cell-reference-file</longflag>
+      <label>Cell Reference File</label>
+      <description>CSV file mapping cell types, cell subtypes, and cell states.</description>
+      <default></default>
+    </file>
   </parameters>
   <parameters>
     <label>Spot Annotation Parameters</label>
     <description>Parameters for spot annotation generation.</description>
     <file reference="_girder_id_">
-      <name>cell_reference_file</name>
-      <longflag>cell-reference-file</longflag>
-      <label>Cell Reference File</label>
-      <description>Reference CSV file containing Main cell types, Sub cell types, and cell states.</description>
-      <default></default>
-    </file>
-    <boolean>
-      <name>use_gene_selection</name>
-      <longflag>use-gene-selection</longflag>
-      <label>Use Gene Selection</label>
-      <description>Whether or not to select genes based on the below Gene Selection Method. If a specific list is needed, attach the CSV file containing a list of those genes in the field "Gene List File".</description>
-      <default>0</default>
-    </boolean>
-    <string-enumeration>
-      <name>gene_selection_method</name>
-      <longflag>gene_selection_method</longflag>
-      <label>Gene Selection Method</label>
-      <description>If processing with genes, pass the method of gene selection here.</description>
-      <element>vst</element>
-      <element>mean.var.plot</element>
-      <element>dispersion</element>
-      <default>vst</default>
-    </string-enumeration>
-    <file reference="_girder_id_">
       <name>gene_list_file</name>
       <label>Gene List File</label>
       <longflag>gene_list_file</longflag>
-      <description>This should be a CSV file containing one column of gene ids to include.</description>
+      <description>Optional CSV file with a single column containing specific gene identifiers to include in the analysis.</description>
       <default></default>
     </file>
-    <integer>
-      <name>n</name>
-      <longflag>n</longflag>
-      <label>Number of genes</label>
-      <description>If using one of the Gene Selection Methods above, pass the number of genes to include here. This parameter is ignored if a specific list of genes is passed. Set to 0 to ignore genes.</description>
-      <default>25</default>
-    </integer>
     <file reference="_girder_id_">
       <name>scale_factors</name>
       <longflag>scale-factors</longflag>
       <label>Scale Factors File</label>
-      <description>File containing scale factors from "hires" and "lores" to the full resolution.</description>
+      <description>Optional JSON file containing scaling factors to convert between image resolutions (high resolution and low resolution to full resolution).</description>
       <default></default>
     </file>
     <file reference="_girder_id_">
       <name>spot_coords</name>
       <longflag>spot-coords</longflag>
       <label>Spot Coordinates File</label>
-      <description>If you have a separate file that contains spot coordinates, include that here</description>
+      <description>Optional CSV file containing spatial coordinates for Visium spots. If not provided, coordinates will be extracted from the input image.</description>
     </file>
   </parameters>
   <parameters advanced="true">

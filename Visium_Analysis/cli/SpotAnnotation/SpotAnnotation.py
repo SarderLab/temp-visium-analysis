@@ -1,6 +1,7 @@
 """Codes for generating spot annotations and posting them to an item
 """
 import os
+import sys
 
 import pandas as pd
 import json
@@ -11,6 +12,57 @@ import subprocess
 from ctk_cli import CLIArgumentParser
 from fusion_tools.utils.shapes import load_visium, geojson_to_histomics
 from Visium_Analysis.utils.spot_aggregation import process_sample_to_spot_json
+
+
+def get_user_id(gc):
+    try:
+        user = gc.get("/user/me")
+        if not user:
+            token_info = gc.get("/token/current")
+            if token_info and "userId" in token_info:
+                return token_info["userId"]
+            else:
+                print("Unable to retrieve user ID from token.")
+                return None
+        return user["_id"]
+    except girder_client.HttpError as e:
+        print(f"Authentication failed: {e}")
+        return None
+
+def get_user_info(gc, id):
+    try:
+        user = gc.get(f'/user/{id}')
+        return user
+    except girder_client.HttpError as e:
+        print(f"Failed to retrieve user info: {e}")
+        return None
+
+def get_user_running_jobs(gc, user_id):
+    try:
+        jobs = gc.get("job", parameters={
+            "userId": user_id,
+            "handlers": '["celery_handler"]',
+            "statuses": '[2]'
+        })
+        assert len(jobs) > 0, "No running jobs found for user."
+        return jobs
+    except girder_client.HttpError as e:
+        print(f"Failed to retrieve running jobs: {e}")
+        return []
+
+def get_job(gc, title):
+    user_id = get_user_id(gc)
+    if not user_id:
+        print("No user ID found. Cannot retrieve jobs.")
+        return None, None
+    user = get_user_info(gc, user_id)
+
+    running_jobs = get_user_running_jobs(gc, user_id)
+    for job in running_jobs:
+        if job["title"] == title:
+            return job, user['login']
+    print(f"No running jobs found with title '{title}'.")
+    return None, user['login']
 
 # Make sure these don't have spaces
 INTEGRATION_DATA_KEYS = [
@@ -34,6 +86,8 @@ INTEGRATION_DATA_KEYS = [
 
 
 def main(args):
+    TITLE = 'Spot Annotation'
+    sys.stdout.flush()
 
     gc = girder_client.GirderClient(
         apiUrl=args.girderApiUrl
@@ -43,7 +97,11 @@ def main(args):
     print('Input arguments:')
     for a in vars(args):
         print(f'{a}: {getattr(args,a)}')
-    
+
+    job, user_login = get_job(gc, TITLE)
+    if job:
+        job_id = job['_id']
+        print(f"Using job ID: {job_id} for user: {user_login}")
 
     file_info = gc.get(f'/file/{args.input_file}')
     file_name = file_info['name']
@@ -92,13 +150,7 @@ def main(args):
         # Loading annotations from spot coordinate path
         visium_spots = load_visium(spot_coords_path)
 
-        # Checking for gene_list_file or gene_selection_method
-        if args.use_gene_selection:
-            print(f'Using gene selection method: {args.gene_selection_method}, {args.n} selected')
-            subprocess.call(['Rscript', '../scripts/gene_selection_csv.r', file_name_path,args.gene_selection_method,str(args.n)])
-            output_csvs = [i for i in os.listdir(os.getcwd()+'/') if 'csv' in i and not i=='spot_coordinates.csv']
-            print(f'Updated Output CSV files: {output_csvs}')
-
+        # Checking for gene_list_file
         if args.gene_list_file is not None:
             try:
                 gene_list_file_info = gc.get(f'/file/{args.gene_list_file}')
@@ -168,6 +220,14 @@ def main(args):
 
         # Converting to histomics format just to add a "name"
         histomics_spots = geojson_to_histomics(visium_spots)
+
+        attributes = {
+            "job_id": job_id,
+            "plugin": TITLE,
+            "user": user_login if user_login else "system"
+        }
+
+        histomics_spots[0]['annotation']['attributes'] = attributes
 
         gc.post(
             f'/annotation/item/{file_info["itemId"]}?token={args.girderToken}',
