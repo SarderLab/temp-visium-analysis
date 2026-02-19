@@ -1,5 +1,5 @@
 # Replace this with whatever tag you build/push for the base image
-FROM tatkeanish/seurat-python-base:stable
+FROM sarderlab/seurat-python-base:stable
 
 LABEL maintainer="Anish Tatke CMI Lab <anish.tatke@medicine.ufl.edu>"
 
