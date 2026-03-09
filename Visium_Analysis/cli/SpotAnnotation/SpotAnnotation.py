@@ -136,15 +136,25 @@ def main(args):
 
     # Creating GeoJSON formatted annotations
     spot_coords_path = None
-    if 'spot_coordinates.csv' in os.listdir(os.getcwd()+'/'):
-        print(f'Spot coordinates found at: {os.getcwd()}/spot_coordinates.csv')
+
+    if 'spot_coordinates.csv' in os.listdir(os.getcwd()):
         spot_coords_path = f'{os.getcwd()}/spot_coordinates.csv'
+
     elif os.path.exists('/spot_coordinates.csv'):
-        print(f'Spot coordinates found at: /spot_coordinates.csv')
         spot_coords_path = '/spot_coordinates.csv'
+
     elif os.path.exists('/cli/spot_coordinates.csv'):
-        print(f'Spot coordinates found at: /cli/spot_coordinates.csv')
         spot_coords_path = '/cli/spot_coordinates.csv'
+
+    elif os.path.exists('/opt/Visium_Analysis/Visium_Analysis/cli/spot_coordinates.csv'):
+        spot_coords_path = '/opt/Visium_Analysis/Visium_Analysis/cli/spot_coordinates.csv'
+
+    print("Re Searching for spot_coordinates.csv in the following locations:")
+    for root, dirs, files in os.walk('/'):
+    if 'spot_coordinates.csv' in files:
+        spot_coords_path = os.path.join(root, 'spot_coordinates.csv')
+        print(f"Found spot coordinates at: {spot_coords_path}")
+        break
 
     if not spot_coords_path is None:
         # Loading annotations from spot coordinate path
